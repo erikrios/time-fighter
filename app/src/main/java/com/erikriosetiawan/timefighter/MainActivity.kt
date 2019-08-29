@@ -3,6 +3,7 @@ package com.erikriosetiawan.timefighter
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
@@ -18,12 +19,22 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private var score = 0
     private var initialCountDown = 60000L
     private var countDownInteval = 1000L
+    private var timeLeftOnTimer = 6000L
 
     private var gameStarted = false
+
+    private val TAG = MainActivity::class.java.simpleName
+
+    companion object {
+        private val SCORE_KEY = "SCORE_KEY"
+        private val TIME_LEFT_KEY = "TIME_LEFT_KEY"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        Log.d(TAG, "onCreate called. Score is $score")
 
         tvScore = findViewById(R.id.tv_score)
         tvTimeRemaining = findViewById(R.id.tv_time_remaining)
@@ -32,6 +43,14 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         resetGame()
 
         btnTapMe.setOnClickListener(this)
+
+        if (savedInstanceState != null) {
+            score = savedInstanceState.getInt(SCORE_KEY)
+            timeLeftOnTimer = savedInstanceState.getLong(TIME_LEFT_KEY)
+            restoreGame()
+        } else {
+            resetGame()
+        }
     }
 
     override fun onClick(v: View?) {
@@ -42,6 +61,27 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
+    private fun restoreGame() {
+        tvScore.text = getString(R.string.your_score, score.toString())
+        val restoredTime = timeLeftOnTimer / 1000
+        tvTimeRemaining.text = getString(R.string.time_remaining, restoredTime.toString())
+
+        counDownTimer = object:CountDownTimer(timeLeftOnTimer, countDownInteval) {
+            override fun onTick(millisUntilFinished: Long) {
+                timeLeftOnTimer = millisUntilFinished
+                var timeLeft = millisUntilFinished / 1000
+                tvTimeRemaining.text = getString(R.string.time_remaining, timeLeft.toString())
+            }
+
+            override fun onFinish() {
+                endGame()
+            }
+        }
+
+        counDownTimer.start()
+        gameStarted = true
+    }
+
     private fun resetGame() {
         score = 0
         tvScore.text = getString(R.string.your_score, score.toString())
@@ -50,6 +90,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
         counDownTimer = object : CountDownTimer(initialCountDown, countDownInteval) {
             override fun onTick(millisUntilFinished: Long) {
+                timeLeftOnTimer = millisUntilFinished
                 val timeRemaining = millisUntilFinished / 1000
                 tvTimeRemaining.text = getString(R.string.time_remaining, timeRemaining.toString())
             }
@@ -81,5 +122,18 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             Toast.LENGTH_SHORT
         ).show()
         resetGame()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle?) {
+        super.onSaveInstanceState(outState)
+        outState!!.putInt(SCORE_KEY, score)
+        outState.putLong(TIME_LEFT_KEY, timeLeftOnTimer)
+        counDownTimer.cancel()
+        Log.d(TAG, "onSaveInstanceState: Saving Score: $score & Time Left: $timeLeftOnTimer")
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d(TAG, "onDestroy called.")
     }
 }
