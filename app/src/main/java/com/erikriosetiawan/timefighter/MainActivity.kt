@@ -5,6 +5,8 @@ import android.os.Bundle
 import android.os.CountDownTimer
 import android.util.Log
 import android.view.View
+import android.view.animation.Animation
+import android.view.animation.AnimationUtils
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
@@ -30,6 +32,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         private val TIME_LEFT_KEY = "TIME_LEFT_KEY"
     }
 
+    private lateinit var animButton: Animation
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -41,6 +45,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         btnTapMe = findViewById(R.id.btn_tap_me)
 
         resetGame()
+
+        animButton = AnimationUtils.loadAnimation(this, R.anim.bounce)
 
         btnTapMe.setOnClickListener(this)
 
@@ -57,6 +63,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         when (v!!.id) {
             R.id.btn_tap_me -> {
                 incrementScore()
+                btnTapMe.startAnimation(animButton)
             }
         }
     }
@@ -66,7 +73,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         val restoredTime = timeLeftOnTimer / 1000
         tvTimeRemaining.text = getString(R.string.time_remaining, restoredTime.toString())
 
-        counDownTimer = object:CountDownTimer(timeLeftOnTimer, countDownInteval) {
+        counDownTimer = object : CountDownTimer(timeLeftOnTimer, countDownInteval) {
             override fun onTick(millisUntilFinished: Long) {
                 timeLeftOnTimer = millisUntilFinished
                 var timeLeft = millisUntilFinished / 1000
