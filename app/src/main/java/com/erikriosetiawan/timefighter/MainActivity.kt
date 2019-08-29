@@ -120,6 +120,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
         score++
         tvScore.text = getString(R.string.your_score, score.toString())
+        val blinkAnimation = AnimationUtils.loadAnimation(this, R.anim.blink)
+        tvScore.startAnimation(blinkAnimation)
     }
 
     private fun endGame() {
